@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { updateProfile } from '@/actions/user.actions';
+import { updateProfile } from '@/actions/authenticated/users/user.actions';
 import { useAuthStore } from '@/store/auth.store';
 import type { User } from '@/types';
 

@@ -11,6 +11,8 @@ import { register } from '@/actions/auth/register.actions';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
+import { PasswordStrength } from '@/components/ui/password-strength';
 import { registerSchema, type RegisterSchema } from '@/lib/validations/auth.schemas';
 
 export function RegisterForm(): React.JSX.Element {
@@ -106,14 +108,14 @@ export function RegisterForm(): React.JSX.Element {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="register-password">Password</FieldLabel>
-                <Input
+                <PasswordInput
                   {...field}
                   id="register-password"
-                  type="password"
                   placeholder="••••••••"
                   autoComplete="new-password"
                   aria-invalid={fieldState.invalid}
                 />
+                <PasswordStrength password={field.value} />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
@@ -125,10 +127,9 @@ export function RegisterForm(): React.JSX.Element {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="register-confirm-password">Confirm password</FieldLabel>
-                <Input
+                <PasswordInput
                   {...field}
                   id="register-confirm-password"
-                  type="password"
                   placeholder="••••••••"
                   autoComplete="new-password"
                   aria-invalid={fieldState.invalid}

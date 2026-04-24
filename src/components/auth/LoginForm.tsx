@@ -11,6 +11,7 @@ import { login } from '@/actions/auth/login.actions';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { loginSchema, type LoginSchema } from '@/lib/validations/auth.schemas';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -88,10 +89,9 @@ export function LoginForm(): React.JSX.Element {
                     Forgot password?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   {...field}
                   id="login-password"
-                  type="password"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   aria-invalid={fieldState.invalid}

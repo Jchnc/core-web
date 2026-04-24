@@ -1,5 +1,5 @@
 import type { ForgotPasswordDto } from '@/types';
-import { backendPost, type ActionResult } from '../auth.actions';
+import { backendPost, type ActionResult } from './auth.actions';
 
 /**
  * Forgot password action

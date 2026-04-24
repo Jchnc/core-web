@@ -2,36 +2,9 @@
 
 import { AxiosError } from 'axios';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-
+import { getAccessToken } from '@/lib/api/auth/get-access-token';
 import { backend } from '@/lib/api/backend';
-import type { ApiResponse, User, UpdateUserDto } from '@/types';
-
-async function getAccessToken(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const refreshToken = cookieStore.get('refresh_token')?.value;
-
-  if (!refreshToken) return null;
-
-  try {
-    const { data } = await backend.post<{ data: { access_token: string } }>(
-      '/auth/session',
-      {},
-      {
-        headers: { Cookie: `refresh_token=${refreshToken}` },
-      },
-    );
-
-    return data.data.access_token;
-  } catch {
-    return null;
-  }
-}
-
-interface ActionResult<T = null> {
-  data?: T;
-  error?: string;
-}
+import type { ActionResult, ApiResponse, UpdateUserDto, User } from '@/types';
 
 export async function updateProfile(
   userId: string,

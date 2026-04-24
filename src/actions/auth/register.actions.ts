@@ -1,5 +1,5 @@
 import type { RegisterDto } from '@/types';
-import { backendPost, type ActionResult } from '../auth.actions';
+import { backendPost, type ActionResult } from './auth.actions';
 
 /**
  * Register action

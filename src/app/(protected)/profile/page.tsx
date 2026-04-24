@@ -11,7 +11,7 @@ export default async function ProfilePage() {
   const session = await requireSession();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="container mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
         <p className="text-muted-foreground text-sm">Manage your account information</p>

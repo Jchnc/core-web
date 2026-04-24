@@ -10,9 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SidebarMenuButton } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/store/auth.store';
 import type { User } from '@/types';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { ChevronsUpDown, LogOut, User as UserIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UserMenuProps {
@@ -39,17 +40,52 @@ export function UserMenu({ user }: UserMenuProps): React.JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none">
-          <Avatar className="size-8 cursor-pointer">
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+        <SidebarMenuButton
+          size="lg"
+          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
+        >
+          <Avatar className="size-8 rounded-lg">
+            <AvatarFallback className="rounded-lg text-xs">{initials}</AvatarFallback>
           </Avatar>
-        </button>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">{user.name}</span>
+            <span className="text-muted-foreground truncate text-xs">{user.email}</span>
+          </div>
+          <ChevronsUpDown className="ml-auto size-4" />
+        </SidebarMenuButton>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel className="font-normal">
-          <p className="text-sm leading-none font-medium">{user.name}</p>
-          <p className="text-muted-foreground mt-1 text-xs">{user.email}</p>
+      <DropdownMenuContent
+        align="center"
+        side="top"
+        sideOffset={4}
+        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+      >
+        <DropdownMenuLabel className="p-0 font-normal">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            <Avatar className="size-8 rounded-lg">
+              <AvatarFallback className="rounded-lg text-xs">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-semibold">{user.name}</span>
+                <span className="text-muted-foreground text-[10px] tracking-wide uppercase">
+                  {user.role}
+                </span>
+              </div>
+              <span className="text-muted-foreground truncate text-xs">{user.email}</span>
+              <div className="mt-1 flex items-center gap-1 text-[11px]">
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    user.isEmailVerified ? 'bg-green-500' : 'bg-red-500'
+                  }`}
+                />
+                <span className={user.isEmailVerified ? 'text-green-500' : 'text-red-500'}>
+                  {user.isEmailVerified ? 'Verified' : 'Not verified'}
+                </span>
+              </div>
+            </div>
+          </div>
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />

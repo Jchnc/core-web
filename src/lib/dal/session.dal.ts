@@ -3,6 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 import type { Session, User } from '@/types';
 import { backend } from '@/lib/api/backend';
@@ -28,8 +29,23 @@ async function fetchSession(): Promise<Session | null> {
       user: data.data.user,
       accessToken: data.data.access_token,
     };
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      console.error('fetchSession error:', error.message, error.response?.data);
+
+      // Only return null if the backend explicitly rejected the token
+      if (error.response?.status === 401) {
+        return null;
+      }
+    } else {
+      console.error(
+        'fetchSession error:',
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+    }
+
+    // For other errors (500s, network issues, timeouts), throw so the user isn't logged out
+    throw new Error('Failed to verify session due to a server error.', { cause: error });
   }
 }
 

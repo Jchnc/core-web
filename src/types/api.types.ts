@@ -16,3 +16,8 @@ export interface PaginatedResponse<T> {
   nextCursor: string | null;
   total: number;
 }
+
+export interface ActionResult<T = null> {
+  data?: T;
+  error?: string;
+}

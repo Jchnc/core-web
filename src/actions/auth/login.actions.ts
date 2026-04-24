@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { env } from '@/config/env';
 import { backend } from '@/lib/api/backend';
 import type { ApiResponse, LoginDto, LoginResponse } from '@/types';
-import type { ActionResult } from '../auth.actions';
+import type { ActionResult } from './auth.actions';
 
 const IS_PROD = env.NODE_ENV === 'production';
 

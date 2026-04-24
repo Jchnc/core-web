@@ -25,9 +25,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const setCookieHeader = response.headers['set-cookie'];
     if (setCookieHeader) {
-      const cookieValue =
-        Array.isArray(setCookieHeader) ? setCookieHeader.join(', ') : setCookieHeader;
-      nextRes.headers.set('set-cookie', cookieValue);
+      const cookiesArr = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+      for (const cookie of cookiesArr) {
+        nextRes.headers.append('set-cookie', cookie);
+      }
     }
 
     return nextRes;
