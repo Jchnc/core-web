@@ -4,6 +4,7 @@ import { AppBreadcrumbs } from '@/components/layout/AppBreadcrumbs';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { requireSession } from '@/lib/dal/session.dal';
+import { OAuthHydrator } from '@/components/auth/OAuthHydrator';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export default async function ProtectedLayout({
 
   return (
     <AuthProvider user={session.user} accessToken={session.accessToken}>
+      <OAuthHydrator />
       <SidebarProvider>
         <AppSidebar user={session.user} />
         <SidebarInset>

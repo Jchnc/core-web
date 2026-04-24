@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { PasswordStrength } from '@/components/ui/password-strength';
 import { registerSchema, type RegisterSchema } from '@/lib/validations/auth.schemas';
+import { GoogleButton } from './GoogleButton';
 
 export function RegisterForm(): React.JSX.Element {
   const router = useRouter();
@@ -143,6 +144,15 @@ export function RegisterForm(): React.JSX.Element {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Creating account…' : 'Create account'}
         </Button>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card text-muted-foreground px-2">Or</span>
+          </div>
+        </div>
+        <GoogleButton />
       </form>
 
       <p className="text-muted-foreground text-center text-sm">

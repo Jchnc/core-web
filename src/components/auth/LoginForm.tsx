@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { loginSchema, type LoginSchema } from '@/lib/validations/auth.schemas';
 import { useAuthStore } from '@/store/auth.store';
+import { GoogleButton } from './GoogleButton';
 
 export function LoginForm(): React.JSX.Element {
   const router = useRouter();
@@ -106,6 +107,17 @@ export function LoginForm(): React.JSX.Element {
           {isLoading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card text-muted-foreground px-2">Or</span>
+        </div>
+      </div>
+
+      <GoogleButton />
 
       <p className="text-muted-foreground text-center text-sm">
         Don&apos;t have an account?{' '}
