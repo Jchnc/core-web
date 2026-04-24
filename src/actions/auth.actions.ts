@@ -1,11 +1,12 @@
 'use server';
 
+import { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
 
 import { env } from '@/config/env';
+import { backend } from '@/lib/api/backend';
 import type { ApiResponse } from '@/types';
 
-const BACKEND_URL = env.BACKEND_URL;
 const IS_PROD = env.NODE_ENV === 'production';
 
 export interface ActionResult<T = null> {
@@ -15,11 +16,10 @@ export interface ActionResult<T = null> {
 }
 
 /**
- * Backend POST action
- * @param path API path
+ * Generic POST to backend API.
+ * @param path API path (e.g. '/auth/login')
  * @param body Request body
- * @param cookieHeader Optional cookie header
- * @returns HTTP response
+ * @param cookieHeader Optional cookie header for forwarding
  */
 export async function backendPost<TBody, TResponse>(
   path: string,
@@ -27,32 +27,24 @@ export async function backendPost<TBody, TResponse>(
   cookieHeader?: string,
 ): Promise<{ ok: boolean; status: number; data?: TResponse; error?: string }> {
   try {
-    const res = await fetch(`${BACKEND_URL}${path}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      },
-      body: JSON.stringify(body),
-      cache: 'no-store',
+    const response = await backend.post<ApiResponse<TResponse>>(path, body, {
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
     });
 
-    if (!res.ok) {
-      const err = (await res.json()) as { message: string | string[] };
+    return { ok: true, status: response.status, data: response.data.data };
+  } catch (error) {
+    if (error instanceof AxiosError && error.response) {
+      const err = error.response.data as { message: string | string[] };
       const message = Array.isArray(err.message) ? err.message[0] : err.message;
-      return { ok: false, status: res.status, error: message };
+      return { ok: false, status: error.response.status, error: message };
     }
 
-    const data = (await res.json()) as ApiResponse<TResponse>;
-    return { ok: true, status: res.status, data: data.data };
-  } catch {
     return { ok: false, status: 500, error: 'Network error. Please try again.' };
   }
 }
 
 /**
- * Set refresh cookie
- * @param cookieHeader Cookie header from response
+ * Set refresh cookie from raw Set-Cookie header
  */
 export async function setRefreshCookie(cookieHeader: string): Promise<void> {
   const match = /refresh_token=([^;]+)/.exec(cookieHeader);

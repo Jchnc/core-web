@@ -1,11 +1,11 @@
 'use server';
 
+import { AxiosError } from 'axios';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
-import { env } from '@/config/env';
-import type { ApiResponse, User, UpdateUserDto } from '@/types';
 
-const BACKEND_URL = env.BACKEND_URL;
+import { backend } from '@/lib/api/backend';
+import type { ApiResponse, User, UpdateUserDto } from '@/types';
 
 /**
  * Get access token from refresh token
@@ -18,16 +18,11 @@ async function getAccessToken(): Promise<string | null> {
   if (!refreshToken) return null;
 
   try {
-    const res = await fetch(`${BACKEND_URL}/auth/refresh`, {
-      method: 'POST',
+    const { data } = await backend.post<{ data: { access_token: string } }>('/auth/refresh', null, {
       headers: { Cookie: `refresh_token=${refreshToken}` },
-      cache: 'no-store',
     });
 
-    if (!res.ok) return null;
-
-    const { data } = (await res.json()) as { data: { access_token: string } };
-    return data.access_token;
+    return data.data.access_token;
   } catch {
     return null;
   }
@@ -55,25 +50,18 @@ export async function updateProfile(
   }
 
   try {
-    const res = await fetch(`${BACKEND_URL}/users/${userId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(dto),
-      cache: 'no-store',
+    const response = await backend.patch<ApiResponse<User>>(`/users/${userId}`, dto, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    if (!res.ok) {
-      const err = (await res.json()) as { message: string };
+    revalidatePath('/profile');
+    return { data: response.data.data };
+  } catch (error) {
+    if (error instanceof AxiosError && error.response) {
+      const err = error.response.data as { message: string };
       return { error: err.message ?? 'Update failed' };
     }
 
-    const { data } = (await res.json()) as ApiResponse<User>;
-    revalidatePath('/profile');
-    return { data };
-  } catch {
     return { error: 'Network error. Please try again.' };
   }
 }

@@ -52,15 +52,13 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const res = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      const res = await axios.post<{ data: { access_token: string } }>(
+        `${NEXT_PUBLIC_APP_URL}/api/auth/refresh`,
+        null,
+        { withCredentials: true },
+      );
 
-      if (!res.ok) throw new Error('Refresh failed');
-
-      const { data } = (await res.json()) as { data: { access_token: string } };
-      const newToken = data.access_token;
+      const newToken = res.data.data.access_token;
 
       accessToken = newToken;
       refreshQueue.forEach((cb) => cb(newToken));

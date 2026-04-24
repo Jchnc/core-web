@@ -2,12 +2,10 @@
 
 import { cookies } from 'next/headers';
 
-import { env } from '@/config/env';
-
-const BACKEND_URL = env.BACKEND_URL;
+import { backend } from '@/lib/api/backend';
 
 /**
- * Logout action
+ * Logout action — revokes session on backend and clears local cookie.
  */
 export async function logout(): Promise<void> {
   const cookieStore = await cookies();
@@ -15,12 +13,8 @@ export async function logout(): Promise<void> {
 
   if (refreshToken) {
     try {
-      await fetch(`${BACKEND_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          Cookie: `refresh_token=${refreshToken}`,
-        },
-        cache: 'no-store',
+      await backend.post('/auth/logout', null, {
+        headers: { Cookie: `refresh_token=${refreshToken}` },
       });
     } catch {
       // silent, always clear cookie regardless

@@ -5,8 +5,12 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import type { Session, User } from '@/types';
-import { env } from '@/config/env';
+import { backend } from '@/lib/api/backend';
 
+/**
+ * Fetch session from backend
+ * @returns Session or null
+ */
 async function fetchSession(): Promise<Session | null> {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get('refresh_token')?.value;
@@ -14,24 +18,17 @@ async function fetchSession(): Promise<Session | null> {
   if (!refreshToken) return null;
 
   try {
-    const res = await fetch(`${env.BACKEND_URL}/auth/refresh`, {
-      method: 'POST',
+    const { data } = await backend.post<{
+      data: { access_token: string; user: User };
+    }>('/auth/refresh', null, {
       headers: {
         Cookie: `refresh_token=${refreshToken}`,
-        'Content-Type': 'application/json',
       },
-      cache: 'no-store',
     });
 
-    if (!res.ok) return null;
-
-    const { data } = (await res.json()) as {
-      data: { access_token: string; user: User };
-    };
-
     return {
-      user: data.user,
-      accessToken: data.access_token,
+      user: data.data.user,
+      accessToken: data.data.access_token,
     };
   } catch {
     return null;

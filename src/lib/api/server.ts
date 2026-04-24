@@ -1,14 +1,10 @@
 import 'server-only';
 
-import { env } from '@/config/env';
-import type { ApiError } from '@/types';
+import { AxiosError } from 'axios';
 import { cookies } from 'next/headers';
 
-const BACKEND_URL = env.BACKEND_URL;
-
-interface FetchOptions extends Omit<RequestInit, 'body'> {
-  body?: unknown;
-}
+import type { ApiError } from '@/types';
+import { backend } from './backend';
 
 export class ServerApiError extends Error {
   constructor(
@@ -28,40 +24,41 @@ async function getAuthHeader(): Promise<Record<string, string>> {
   if (!refreshToken) return {};
 
   try {
-    const res = await fetch(`${BACKEND_URL}/auth/refresh`, {
-      method: 'POST',
+    const { data } = await backend.post<{ data: { access_token: string } }>('/auth/refresh', null, {
       headers: { Cookie: `refresh_token=${refreshToken}` },
-      cache: 'no-store',
     });
 
-    if (!res.ok) return {};
-
-    const { data } = (await res.json()) as { data: { access_token: string } };
-    return { Authorization: `Bearer ${data.access_token}` };
+    return { Authorization: `Bearer ${data.data.access_token}` };
   } catch {
     return {};
   }
 }
 
-export async function serverFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
+interface ServerFetchOptions {
+  method?: string;
+  body?: unknown;
+  headers?: Record<string, string>;
+}
+
+export async function serverFetch<T>(path: string, options: ServerFetchOptions = {}): Promise<T> {
   const authHeader = await getAuthHeader();
 
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader,
-      ...options.headers,
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    cache: 'no-store',
-  });
+  try {
+    const response = await backend.request<T>({
+      url: path,
+      method: options.method ?? 'GET',
+      headers: { ...authHeader, ...options.headers },
+      data: options.body,
+    });
 
-  if (!res.ok) {
-    const error = (await res.json()) as ApiError;
-    const message = Array.isArray(error.message) ? error.message[0] : error.message;
-    throw new ServerApiError(res.status, message ?? 'Request failed');
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response) {
+      const apiError = error.response.data as ApiError;
+      const message = Array.isArray(apiError.message) ? apiError.message[0] : apiError.message;
+      throw new ServerApiError(error.response.status, message ?? 'Request failed');
+    }
+
+    throw new ServerApiError(500, 'Network error');
   }
-
-  return res.json() as Promise<T>;
 }
