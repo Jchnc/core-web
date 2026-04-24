@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { z } from "zod";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { updateProfile } from "@/actions/user.actions";
-import { useAuthStore } from "@/store/auth.store";
-import type { User } from "@/types";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { updateProfile } from '@/actions/user.actions';
+import { useAuthStore } from '@/store/auth.store';
+import type { User } from '@/types';
 
 const profileSchema = z.object({
   name: z
     .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(100, "Name must not exceed 100 characters"),
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must not exceed 100 characters'),
 });
 
 type ProfileSchema = z.infer<typeof profileSchema>;
@@ -45,7 +45,7 @@ export function ProfileForm({ user }: ProfileFormProps): React.JSX.Element {
         return;
       }
 
-      toast.success("Profile updated");
+      toast.success('Profile updated');
     } finally {
       setIsLoading(false);
     }
@@ -54,17 +54,13 @@ export function ProfileForm({ user }: ProfileFormProps): React.JSX.Element {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Input
-          {...form.register("name")}
-          disabled={isLoading}
-          placeholder="Your name"
-        />
+        <Input {...form.register('name')} disabled={isLoading} placeholder="Your name" />
         {form.formState.errors.name && (
-          <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+          <p className="text-destructive text-sm">{form.formState.errors.name.message}</p>
         )}
       </div>
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Saving..." : "Save Changes"}
+        {isLoading ? 'Saving...' : 'Save Changes'}
       </Button>
     </form>
   );
