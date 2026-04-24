@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
     try {
       const res = await axios.post<{ data: { access_token: string } }>(
         `${NEXT_PUBLIC_APP_URL}/api/auth/refresh`,
-        null,
+        {},
         { withCredentials: true },
       );
 

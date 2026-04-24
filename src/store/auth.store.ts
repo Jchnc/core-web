@@ -1,6 +1,7 @@
 import { setClientAccessToken } from '@/lib/api/client';
 import type { User } from '@/types';
 import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
 interface AuthState {
   user: User | null;
@@ -11,23 +12,25 @@ interface AuthState {
   clear: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  isHydrated: false,
+export const useAuthStore = create<AuthState>()(
+  devtools((set) => ({
+    user: null,
+    accessToken: null,
+    isHydrated: false,
 
-  hydrate(user: User, accessToken: string): void {
-    setClientAccessToken(accessToken);
-    set({ user, accessToken, isHydrated: true });
-  },
+    hydrate(user: User, accessToken: string): void {
+      setClientAccessToken(accessToken);
+      set({ user, accessToken, isHydrated: true });
+    },
 
-  setAccessToken(token: string): void {
-    setClientAccessToken(token);
-    set({ accessToken: token });
-  },
+    setAccessToken(token: string): void {
+      setClientAccessToken(token);
+      set({ accessToken: token });
+    },
 
-  clear(): void {
-    setClientAccessToken(null);
-    set({ user: null, accessToken: null, isHydrated: false });
-  },
-}));
+    clear(): void {
+      setClientAccessToken(null);
+      set({ user: null, accessToken: null, isHydrated: false });
+    },
+  })),
+);

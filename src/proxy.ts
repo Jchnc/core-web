@@ -1,8 +1,3 @@
-/**
- * NOTE: proxy.ts only checks for cookie presence.
- * Cryptographic validation and integrity checks are performed
- * within the Data Access Layer (DAL) of each protected layout.
- */
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 

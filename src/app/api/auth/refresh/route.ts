@@ -11,11 +11,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const response = await backend.post<{ data: { access_token: string } }>('/auth/refresh', null, {
-      headers: {
-        Cookie: `refresh_token=${refreshToken}`,
+    const response = await backend.post<{ data: { access_token: string } }>(
+      '/auth/refresh',
+      {},
+      {
+        headers: {
+          Cookie: `refresh_token=${refreshToken}`,
+        },
       },
-    });
+    );
 
     const nextRes = NextResponse.json(response.data);
 

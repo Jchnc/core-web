@@ -7,10 +7,6 @@ import { cookies } from 'next/headers';
 import { backend } from '@/lib/api/backend';
 import type { ApiResponse, User, UpdateUserDto } from '@/types';
 
-/**
- * Get access token from refresh token
- * @returns Access token or null
- */
 async function getAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get('refresh_token')?.value;
@@ -18,9 +14,13 @@ async function getAccessToken(): Promise<string | null> {
   if (!refreshToken) return null;
 
   try {
-    const { data } = await backend.post<{ data: { access_token: string } }>('/auth/refresh', null, {
-      headers: { Cookie: `refresh_token=${refreshToken}` },
-    });
+    const { data } = await backend.post<{ data: { access_token: string } }>(
+      '/auth/session',
+      {},
+      {
+        headers: { Cookie: `refresh_token=${refreshToken}` },
+      },
+    );
 
     return data.data.access_token;
   } catch {
@@ -33,12 +33,6 @@ interface ActionResult<T = null> {
   error?: string;
 }
 
-/**
- * Update profile action
- * @param userId User ID
- * @param dto Update user DTO
- * @returns ActionResult with updated user
- */
 export async function updateProfile(
   userId: string,
   dto: UpdateUserDto,
