@@ -1,3 +1,5 @@
+'use server';
+
 import type { ResetPasswordDto } from '@/types';
 import { backendPost, type ActionResult } from './auth.actions';
 

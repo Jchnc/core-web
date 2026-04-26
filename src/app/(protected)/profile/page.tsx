@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { requireSession } from '@/lib/dal/session.dal';
 import { ProfileForm } from '@/components/profile/ProfileForm';
+import { TwoFactorToggle } from '@/components/profile/TwoFactorToggle';
 import { Separator } from '@/components/ui/separator';
 
 export const metadata: Metadata = {
@@ -40,6 +41,17 @@ export default async function ProfilePage() {
         </div>
 
         <ProfileForm user={session.user} />
+      </section>
+
+      <Separator />
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-sm font-medium">Security</h2>
+          <p className="text-muted-foreground text-xs">Manage your account security settings</p>
+        </div>
+
+        <TwoFactorToggle enabled={session.user.isTwoFactorEnabled ?? false} />
       </section>
     </div>
   );

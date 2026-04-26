@@ -15,11 +15,13 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { loginSchema, type LoginSchema } from '@/lib/validations/auth.schemas';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleButton } from './GoogleButton';
+import { TwoFactorDialog } from './TwoFactorDialog';
 
 export function LoginForm(): React.JSX.Element {
   const router = useRouter();
-  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const hydrate = useAuthStore((s) => s.hydrate);
   const [isLoading, setIsLoading] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState<string | null>(null);
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -37,15 +39,25 @@ export function LoginForm(): React.JSX.Element {
         return;
       }
 
-      if (result.data) {
-        setAccessToken(result.data.access_token);
+      if (result.data && 'requires_2fa' in result.data) {
+        setTwoFactorToken(result.data.two_factor_token);
+        return;
       }
 
-      router.push('/dashboard');
-      router.refresh();
+      if (result.data && 'access_token' in result.data) {
+        hydrate(result.data.user, result.data.access_token);
+        router.push('/dashboard');
+        router.refresh();
+      }
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleTwoFactorSuccess(accessToken: string, user: Parameters<typeof hydrate>[0]): void {
+    hydrate(user, accessToken);
+    router.push('/dashboard');
+    router.refresh();
   }
 
   return (
@@ -125,6 +137,12 @@ export function LoginForm(): React.JSX.Element {
           Create one
         </Link>
       </p>
+
+      <TwoFactorDialog
+        token={twoFactorToken}
+        onClose={() => setTwoFactorToken(null)}
+        onSuccess={handleTwoFactorSuccess}
+      />
     </div>
   );
 }

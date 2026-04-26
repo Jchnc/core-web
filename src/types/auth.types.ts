@@ -7,6 +7,7 @@ export interface User {
   role: Role;
   isActive: boolean;
   isEmailVerified: boolean;
+  isTwoFactorEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,3 +45,16 @@ export interface LoginResponse {
   access_token: string;
   user: User;
 }
+
+export interface TwoFactorRequiredResponse {
+  requires_2fa: true;
+  two_factor_token: string;
+}
+
+export interface VerifyTwoFactorDto {
+  two_factor_token: string;
+  code: string;
+  trust_device?: boolean;
+}
+
+export type LoginResult = { access_token: string; user: User } | TwoFactorRequiredResponse;
