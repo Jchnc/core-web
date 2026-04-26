@@ -51,7 +51,10 @@ export default async function ProfilePage() {
           <p className="text-muted-foreground text-xs">Manage your account security settings</p>
         </div>
 
-        <TwoFactorToggle enabled={session.user.isTwoFactorEnabled ?? false} />
+        <TwoFactorToggle
+          enabled={session.user.isTwoFactorEnabled ?? false}
+          hasPassword={session.user.hasPassword ?? false}
+        />
       </section>
     </div>
   );

@@ -8,6 +8,7 @@ export interface User {
   isActive: boolean;
   isEmailVerified: boolean;
   isTwoFactorEnabled?: boolean;
+  hasPassword?: boolean;
   createdAt: string;
   updatedAt: string;
 }

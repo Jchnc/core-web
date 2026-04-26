@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { disableTwoFactor } from '@/actions/auth/disable-two-factor.actions';
 import { enableTwoFactor } from '@/actions/auth/enable-two-factor.actions';
+import { setPassword } from '@/actions/auth/set-password.actions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,27 +17,55 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
+import { PasswordStrength } from '@/components/ui/password-strength';
 
 interface TwoFactorToggleProps {
   enabled: boolean;
+  hasPassword: boolean;
 }
 
-export function TwoFactorToggle({ enabled }: TwoFactorToggleProps): React.JSX.Element {
+type DialogMode = 'toggle-2fa' | 'set-password' | null;
+
+export function TwoFactorToggle({ enabled, hasPassword }: TwoFactorToggleProps): React.JSX.Element {
   const [isEnabled, setIsEnabled] = useState(enabled);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [password, setPassword] = useState('');
+  const [userHasPassword, setUserHasPassword] = useState(hasPassword);
+  const [dialogMode, setDialogMode] = useState<DialogMode>(null);
+  const [password, setPasswordValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   function handleToggleClick(): void {
-    setPassword('');
-    setDialogOpen(true);
+    setPasswordValue('');
+    if (!userHasPassword) {
+      setDialogMode('set-password');
+    } else {
+      setDialogMode('toggle-2fa');
+    }
   }
 
-  async function handleConfirm(): Promise<void> {
+  async function handleSetPassword(): Promise<void> {
     if (!password.trim()) return;
 
     setIsLoading(true);
+    try {
+      const result = await setPassword(password);
 
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setUserHasPassword(true);
+      setDialogMode(null);
+      toast.success('Password set successfully. You can now manage 2FA.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleToggle2FA(): Promise<void> {
+    if (!password.trim()) return;
+
+    setIsLoading(true);
     try {
       const action = isEnabled ? disableTwoFactor : enableTwoFactor;
       const result = await action(password);
@@ -47,7 +76,7 @@ export function TwoFactorToggle({ enabled }: TwoFactorToggleProps): React.JSX.El
       }
 
       setIsEnabled(!isEnabled);
-      setDialogOpen(false);
+      setDialogMode(null);
       toast.success(
         isEnabled ? 'Two-factor authentication disabled' : 'Two-factor authentication enabled',
       );
@@ -76,7 +105,60 @@ export function TwoFactorToggle({ enabled }: TwoFactorToggleProps): React.JSX.El
         </Button>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogMode === 'set-password'}
+        onOpenChange={(open) => !open && setDialogMode(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set a Password</DialogTitle>
+            <DialogDescription>
+              Your account was created with Google. Set a password to manage two-factor
+              authentication.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSetPassword();
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="set-password-input">New Password</Label>
+              <PasswordInput
+                id="set-password-input"
+                value={password}
+                onChange={(e) => setPasswordValue(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                disabled={isLoading}
+              />
+              <PasswordStrength password={password} />
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogMode(null)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading || !password.trim()}>
+                {isLoading ? 'Setting password…' : 'Set Password'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={dialogMode === 'toggle-2fa'}
+        onOpenChange={(open) => !open && setDialogMode(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{isEnabled ? 'Disable' : 'Enable'} Two-Factor Authentication</DialogTitle>
@@ -86,7 +168,7 @@ export function TwoFactorToggle({ enabled }: TwoFactorToggleProps): React.JSX.El
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              void handleConfirm();
+              void handleToggle2FA();
             }}
             className="space-y-4"
           >
@@ -95,7 +177,7 @@ export function TwoFactorToggle({ enabled }: TwoFactorToggleProps): React.JSX.El
               <PasswordInput
                 id="2fa-confirm-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPasswordValue(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 disabled={isLoading}
@@ -106,7 +188,7 @@ export function TwoFactorToggle({ enabled }: TwoFactorToggleProps): React.JSX.El
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setDialogOpen(false)}
+                onClick={() => setDialogMode(null)}
                 disabled={isLoading}
               >
                 Cancel

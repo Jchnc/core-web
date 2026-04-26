@@ -1,7 +1,7 @@
 'use server';
 
 import { AxiosError, type AxiosResponse } from 'axios';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 import { backend } from '@/lib/api/backend';
 import type { ApiResponse } from '@/types';
@@ -60,14 +60,34 @@ async function forwardSetCookies(response: AxiosResponse): Promise<void> {
   }
 }
 
+async function getForwardingHeaders(): Promise<Record<string, string>> {
+  const reqHeaders = await headers();
+  const forwardHeaders: Record<string, string> = {};
+
+  const userAgent = reqHeaders.get('user-agent');
+  if (userAgent) forwardHeaders['user-agent'] = userAgent;
+
+  const forwardedFor = reqHeaders.get('x-forwarded-for');
+  if (forwardedFor) forwardHeaders['x-forwarded-for'] = forwardedFor;
+
+  const realIp = reqHeaders.get('x-real-ip');
+  if (realIp) forwardHeaders['x-real-ip'] = realIp;
+
+  const cookieHeader = reqHeaders.get('cookie');
+  if (cookieHeader) forwardHeaders['cookie'] = cookieHeader;
+
+  return forwardHeaders;
+}
+
 export async function backendPost<TBody, TResponse>(
   path: string,
   body: TBody,
   headerOverrides?: Record<string, string>,
 ): Promise<BackendResult<TResponse>> {
   try {
+    const forwardHeaders = await getForwardingHeaders();
     const response = await backend.post<ApiResponse<TResponse>>(path, body, {
-      headers: headerOverrides ?? {},
+      headers: { ...forwardHeaders, ...(headerOverrides ?? {}) },
     });
 
     await forwardSetCookies(response);
@@ -83,8 +103,9 @@ export async function backendGet<TResponse>(
   headerOverrides?: Record<string, string>,
 ): Promise<BackendResult<TResponse>> {
   try {
+    const forwardHeaders = await getForwardingHeaders();
     const response = await backend.get<ApiResponse<TResponse>>(path, {
-      headers: headerOverrides ?? {},
+      headers: { ...forwardHeaders, ...(headerOverrides ?? {}) },
     });
 
     return { ok: true, status: response.status, data: response.data.data };
