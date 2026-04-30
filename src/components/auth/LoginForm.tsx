@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -13,13 +12,10 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { loginSchema, type LoginSchema } from '@/lib/validations/auth.schemas';
-import { useAuthStore } from '@/store/auth.store';
 import { GoogleButton } from './GoogleButton';
 import { TwoFactorDialog } from './TwoFactorDialog';
 
 export function LoginForm(): React.JSX.Element {
-  const router = useRouter();
-  const hydrate = useAuthStore((s) => s.hydrate);
   const [isLoading, setIsLoading] = useState(false);
   const [twoFactorToken, setTwoFactorToken] = useState<string | null>(null);
 
@@ -43,21 +39,14 @@ export function LoginForm(): React.JSX.Element {
         setTwoFactorToken(result.data.two_factor_token);
         return;
       }
-
-      if (result.data && 'access_token' in result.data) {
-        hydrate(result.data.user, result.data.access_token);
-        router.push('/dashboard');
-        router.refresh();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+        throw error;
       }
+      toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
-  }
-
-  function handleTwoFactorSuccess(accessToken: string, user: Parameters<typeof hydrate>[0]): void {
-    hydrate(user, accessToken);
-    router.push('/dashboard');
-    router.refresh();
   }
 
   return (
@@ -138,11 +127,7 @@ export function LoginForm(): React.JSX.Element {
         </Link>
       </p>
 
-      <TwoFactorDialog
-        token={twoFactorToken}
-        onClose={() => setTwoFactorToken(null)}
-        onSuccess={handleTwoFactorSuccess}
-      />
+      <TwoFactorDialog token={twoFactorToken} onClose={() => setTwoFactorToken(null)} />
     </div>
   );
 }

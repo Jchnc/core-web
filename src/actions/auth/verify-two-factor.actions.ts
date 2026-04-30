@@ -1,5 +1,7 @@
 'use server';
 
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import type { LoginResponse, VerifyTwoFactorDto } from '@/types';
 import { backendPost, type ActionResult } from './auth.actions';
 
@@ -12,5 +14,12 @@ export async function verifyTwoFactor(
     return { error: result.error ?? 'Verification failed' };
   }
 
-  return { data: result.data };
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refresh_token');
+
+  if (!refreshToken) {
+    return { error: 'Session creation failed' };
+  }
+
+  redirect('/dashboard');
 }

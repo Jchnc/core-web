@@ -9,12 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuthStore } from '@/store/auth.store';
 
 export function TwoFactorVerifyForm(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const hydrate = useAuthStore((s) => s.hydrate);
 
   const token = searchParams.get('two_factor_token');
   const [code, setCode] = useState('');
@@ -38,29 +36,23 @@ export function TwoFactorVerifyForm(): React.JSX.Element {
       setIsLoading(true);
 
       try {
-        const result = await verifyTwoFactor({
+        await verifyTwoFactor({
           two_factor_token: token,
           code,
           trust_device: trustDevice,
         });
-
-        if (result.error) {
-          toast.error(result.error);
-          setCode('');
-          inputRef.current?.focus();
-          return;
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+          throw error;
         }
-
-        if (result.data) {
-          hydrate(result.data.user, result.data.access_token);
-          router.push('/dashboard');
-          router.refresh();
-        }
+        toast.error('Verification failed');
+        setCode('');
+        inputRef.current?.focus();
       } finally {
         setIsLoading(false);
       }
     },
-    [token, code, trustDevice, hydrate, router],
+    [token, code, trustDevice],
   );
 
   if (!token) return <></>;

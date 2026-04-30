@@ -14,19 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { User } from '@/types';
 
 interface TwoFactorDialogProps {
   token: string | null;
   onClose: () => void;
-  onSuccess: (accessToken: string, user: User) => void;
 }
 
-export function TwoFactorDialog({
-  token,
-  onClose,
-  onSuccess,
-}: TwoFactorDialogProps): React.JSX.Element {
+export function TwoFactorDialog({ token, onClose }: TwoFactorDialogProps): React.JSX.Element {
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,27 +42,23 @@ export function TwoFactorDialog({
       setIsLoading(true);
 
       try {
-        const result = await verifyTwoFactor({
+        await verifyTwoFactor({
           two_factor_token: token,
           code,
           trust_device: trustDevice,
         });
-
-        if (result.error) {
-          toast.error(result.error);
-          setCode('');
-          inputRef.current?.focus();
-          return;
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+          throw error;
         }
-
-        if (result.data) {
-          onSuccess(result.data.access_token, result.data.user);
-        }
+        toast.error('Verification failed');
+        setCode('');
+        inputRef.current?.focus();
       } finally {
         setIsLoading(false);
       }
     },
-    [token, code, trustDevice, onSuccess],
+    [token, code, trustDevice],
   );
 
   return (
